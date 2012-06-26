@@ -1,0 +1,168 @@
+#
+# Makefile include for PVR AddOns
+#
+
+## INCLUDES
+##INCLUDES  = -I. -I$(abs_top_srcdir)/xbmc -I$(abs_top_srcdir)/xbmc/cores/dvdplayer/DVDDemuxers -I$(abs_top_srcdir)/xbmc/addons/include
+##INCLUDES += -I$(abs_top_srcdir)/xbmc/lib -I$(abs_top_srcdir)/addons/library.xbmc.pvr -I$(abs_top_srcdir)/addons/library.xbmc.addon
+ifneq (0,1)
+	INCLUDES += -I$(abs_top_srcdir)/xbmc/cores/dvdplayer/Codecs/ffmpeg
+endif
+ifeq ($(findstring Darwin,$(shell uname -a)), Darwin)
+	INCLUDES += -I/opt/local/include
+endif
+
+## DEFINES
+DEFINES += -D_LINUX -fPIC -DUSE_DEMUX
+
+## CXXFLAGS
+ifeq ($(findstring Darwin,$(shell uname -a)), Darwin)
+	CXXFLAGS ?= -g -O2 -Wall -Woverloaded-virtual -Wno-parentheses -dynamiclib -single_module -undefined dynamic_lookup
+else
+	CXXFLAGS ?= -g -O2 -Wall -Woverloaded-virtual -Wno-parentheses
+endif
+
+##-- include /home/fred/Xbmc/Makefile.include
+AR=ar
+ARFLAGS=crus
+RM=rm -rf
+SHELL=/bin/bash
+ARCH=i486-linux
+abs_top_srcdir=/home/fred/xbmc_addon_fortherecord
+rel_top_srcdir=$(subst $(abspath $(abs_top_srcdir))/,,$(abspath $(CURDIR))/)
+prefix=/usr/local
+exec_prefix=${prefix}
+bindir=${exec_prefix}/bin
+sbindir=${exec_prefix}/sbin
+libexecdir=${exec_prefix}/libexec
+sysconfdir=${prefix}/etc
+sharedstatedir=${prefix}/com
+localstatedir=${prefix}/var
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+oldincludedir=/usr/include
+datarootdir=${prefix}/share
+datadir=${datarootdir}
+infodir=${datarootdir}/info
+localedir=${datarootdir}/locale
+mandir=${datarootdir}/man
+PACKAGE_TARNAME=xbmc
+docdir=${datarootdir}/doc/${PACKAGE_TARNAME}
+htmldir=${docdir}
+dvidir=${docdir}
+pdfdir=${docdir}
+psdir=${docdir}
+CXX=/usr/bin/ccache g++
+CC=/usr/bin/ccache gcc
+CXXFLAGS+= -fPIC -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -DNDEBUG=1 -O2
+CFLAGS+= -fPIC -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -DNDEBUG=1 -O2
+LDFLAGS+=
+INCLUDES+=$(sort  -I$(abs_top_srcdir) -D_GNU_SOURCE=1 -D_REENTRANT)
+INCLUDES+=-I.
+INCLUDES+=-I/home/fred/Xbmc/lib
+INCLUDES+=-I/home/fred/Xbmc/xbmc/linux
+INCLUDES+=-I/home/fred/Xbmc/addons/library.xbmc.addon
+INCLUDES+=-I/home/fred/Xbmc/addons/library.xbmc.pvr
+INCLUDES+=-I/home/fred/Xbmc/xbmc/addons/include/
+INCLUDES+=-I/home/fred/Xbmc/xbmc/cores/dvdplayer/DVDDemuxers
+DEFINES+= \
+	-DTARGET_POSIX -DTARGET_LINUX -D_LINUX \
+	-D_FILE_DEFINED \
+	-D__STDC_CONSTANT_MACROS \
+	-D'GIT_REV="20120622-cd9a9a5"' \
+	-DHAVE_CONFIG_H \
+
+ifeq ($(findstring osx,$(ARCH)), osx)
+	INCLUDES+=-I/home/fred/Xbmc/xbmc/osx
+endif
+
+ifeq ($(ARCH), powerpc-osx)
+	BUNDLE1_O=-lbundle1.o
+endif
+
+ifneq ($(V), 1)
+	SILENT_CPP=@echo "CPP     $(rel_top_srcdir)$@";
+	SILENT_CC =@echo "CC      $(rel_top_srcdir)$@";
+	SILENT_S  =@echo "S       $(rel_top_srcdir)$@";
+	SILENT_GCH=@echo "GCH     $(rel_top_srcdir)$@";
+	SILENT_MM =@echo "MM      $(rel_top_srcdir)$@";
+	SILENT_AR =@echo "AR      $(rel_top_srcdir)$@";
+	SILENT_LD =@echo "LD      $(rel_top_srcdir)$@";
+endif
+
+OBJS+=$(filter %.o,$(SRCS:.cpp=.o))
+OBJS+=$(filter %.o,$(SRCS:.c=.o))
+OBJS+=$(filter %.o,$(SRCS:.S=.o))
+OBJS+=$(filter %.o,$(SRCS:.mm=.o))
+OBJS+=$(filter %.o,$(SRCS:.m=.o))
+
+DEPS+=$(filter %.P,$(OBJS:.o=.P))
+
+GEN_DEPS=\
+  cp $*.d $*.P \
+  && sed -e 's/\#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+         -e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P \
+  && rm -f $*.d \
+  || ( rm -f $*.P $@ && exit 1 )
+
+%.o: %.cpp
+	@rm -f $@
+	$(SILENT_CPP) $(CXX) -MF $*.d -MD -c $(CXXFLAGS) $(DEFINES) $(INCLUDES) $< -o $@ \
+	&& $(GEN_DEPS)
+
+%.o: %.cc
+	@rm -f $@
+	$(SILENT_CPP) $(CXX) -MF $*.d -MD -c $(CXXFLAGS) $(DEFINES) $(INCLUDES) $< -o $@ \
+	&& $(GEN_DEPS)
+
+%.o: %.c
+	@rm -f $@
+	$(SILENT_CC) $(CC) -MF $*.d -MD -c $(CFLAGS) $(DEFINES) $(INCLUDES) $< -o $@ \
+	&& $(GEN_DEPS)
+
+%.o: %.C
+	@rm -f $@
+	$(SILENT_CPP) $(CXX) -MF $*.d -MD -c $(CFLAGS) $(DEFINES) $(INCLUDES) $< -o $@ \
+	&& $(GEN_DEPS)
+
+%.o: %.S
+	@rm -f $@
+	$(SILENT_CC) $(CC) -c $(CFLAGS) $(DEFINES) $(INCLUDES) $< -o $@
+
+
+%.h.gch : %.h
+	$(SILENT_GCH) $(CXX) -c $(CFLAGS) $(DEFINES) $(INCLUDES) $< -o $@
+
+%.o: %.m
+	@rm -f $@
+	$(SILENT_MM) $(CXX) -MF $*.d -MD -c $(CXXFLAGS) $(DEFINES) $(INCLUDES) $< -o $@ \
+	&& $(GEN_DEPS)
+
+%.o: %.mm
+	@rm -f $@
+	$(SILENT_MM) $(CXX) -MF $*.d -MD -c $(CXXFLAGS) $(DEFINES) $(INCLUDES) $< -o $@ \
+	&& $(GEN_DEPS)
+
+
+.PHONY : lib pch clean distclean distclean_evil
+
+$(LIB): $(OBJS)
+	$(SILENT_AR) $(AR) $(ARFLAGS) $(LIB) $(OBJS)
+
+pch: $(PCH:.h=.h.gch)
+	for d in $(DIRS); do (cd "$$d"; $(MAKE) pch ); done
+
+clean: 
+	$(RM) $(OBJS) *.o $(LIB) $(SLIB) $(CLEAN_FILES) $(PCH:.h=.h.gch) $(DEPS)
+	for d in $(DIRS); do (if test -f "$$d/Makefile"; then ($(MAKE) -C "$$d" clean); fi ); done
+
+distclean:
+	$(RM) $(OBJS) *.o $(LIB) $(SLIB) $(STATICLIB) $(CLEAN_FILES) $(DISTCLEAN_FILES) $(PCH:.h=.h.gch) $(DEPS)
+	for d in $(DIRS); do (if test -f "$$d/Makefile"; then ($(MAKE) -C "$$d" distclean || $(MAKE) -C "$$d" clean); fi ); done
+	if [ "$(shell pwd -P)" = "$(abs_top_srcdir)" ] || \
+	   [ "$(shell pwd)" = "$(abs_top_srcdir)" ]; then rm -f $(AUTOGENERATED_MAKEFILES) Makefile.include Makefile; fi
+##-- end of include /home/fred/Xbmc/Makefile.include
+-include $(patsubst %.cpp,%.P,$(patsubst %.c,%.P,$(SRCS)))
+
+%.pvr: $(OBJS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared -g $(OBJS) $(LIBS) $(LIBDIRS) $(SILIB) -o $(LIB)

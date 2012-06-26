@@ -1,0 +1,63 @@
+#
+# Makefile for the XBMC ForTheRecord AddOn
+#
+# See the README for copyright information and
+# how to reach the author.
+#
+
+LIBS   = -ldl -lpthread -lcurl -lsmbclient
+LIBDIR = @abs_top_srcdir@/addons/pvr.fortherecord.argus
+ifeq ($(findstring osx,@ARCH@),osx)
+# until we get an additional extension point in addon.xml we can't create
+# versions for osx and ios with different names
+#ifeq ($(findstring x86-osx,@ARCH@),x86-osx)
+PVR    = @abs_top_srcdir@/addons/pvr.fortherecord.argus/XBMC_ForTheRecord_osx.pvr
+#else
+#PVR    = @abs_top_srcdir@/addons/pvr.fortherecord.argus/XBMC_ForTheRecord_ios.pvr
+#endif
+else
+PVR    = @abs_top_srcdir@/addons/pvr.fortherecord.argus/XBMC_ForTheRecord_linux.pvr
+endif
+
+pvr: $(PVR)
+
+SRCS   = utils.cpp \
+        activerecording.cpp \
+        channel.cpp \
+        epg.cpp \
+        recording.cpp \
+        recordingsummary.cpp \
+        recordinggroup.cpp \
+        tools.cpp \
+        upcomingrecording.cpp \
+        uri.cpp \
+        lib/jsoncpp/src/lib_json/json_reader.cpp \
+        lib/jsoncpp/src/lib_json/json_writer.cpp \
+        lib/jsoncpp/src/lib_json/json_value.cpp \
+        lib/tsreader/FileReader.cpp \
+        lib/tsreader/MultiFileReader.cpp \
+        lib/tsreader/TSReader.cpp \
+        lib/filesystem/FileSMB.cpp \
+        lib/filesystem/DirectorySMB.cpp \
+        KeepAliveThread.cpp \
+        fortherecordrpc.cpp \
+        pvrclient-fortherecord.cpp \
+        client.cpp
+
+include ../Makefile.include
+
+INCLUDES += -Ilib/jsoncpp/include/
+INCLUDES += -Ilib/filesystem/
+
+CXXFLAGS += -DTSREADER
+ifeq ($(findstring osx,@ARCH@),osx)
+CXXFLAGS += -DTARGET_OSX
+else
+CXXFLAGS += -DTARGET_LINUX
+endif
+
+CLEAN_FILES = *.P *~ $(PVR)
+
+$(PVR): $(OBJS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared -g $(OBJS) $(LIBS) $(LIBDIRS) $(SILIB) -o $(PVR)
+
