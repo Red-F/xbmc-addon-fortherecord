@@ -5,8 +5,7 @@
 # how to reach the author.
 #
 
-LIBS   = -ldl -lpthread -lcurl -lsmbclient
-LIBDIR = /home/fred/Xbmc/addons/pvr.fortherecord.argus
+LIBS   = -ldl -lcurl
 ifeq ($(findstring osx,i486-linux),osx)
 # until we get an additional extension point in addon.xml we can't create
 # versions for osx and ios with different names
@@ -46,6 +45,8 @@ SRCS   = utils.cpp \
 
 include ../Makefile.include
 
+.SECONDARY:
+
 INCLUDES += -Ilib/jsoncpp/include/
 INCLUDES += -Ilib/filesystem/
 
@@ -58,6 +59,6 @@ endif
 
 CLEAN_FILES = *.P *~ $(PVR)
 
-$(PVR): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared -g $(OBJS) $(LIBS) $(LIBDIRS) $(SILIB) -o $(PVR)
+##$(PVR): $(OBJS)
+##	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared -g $(OBJS) $(LIBS) $(LIBDIRS) $(SILIB) -o $(PVR)
 
