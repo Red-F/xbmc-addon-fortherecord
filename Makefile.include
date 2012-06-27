@@ -3,10 +3,7 @@
 #
 
 ## INCLUDES
-##INCLUDES  = -I. -I$(abs_top_srcdir)/xbmc -I$(abs_top_srcdir)/xbmc/cores/dvdplayer/DVDDemuxers -I$(abs_top_srcdir)/xbmc/addons/include
-##INCLUDES += -I$(abs_top_srcdir)/xbmc/lib -I$(abs_top_srcdir)/addons/library.xbmc.pvr -I$(abs_top_srcdir)/addons/library.xbmc.addon
 ifneq (0,1)
-	INCLUDES += -I$(abs_top_srcdir)/xbmc/cores/dvdplayer/Codecs/ffmpeg
 endif
 ifeq ($(findstring Darwin,$(shell uname -a)), Darwin)
 	INCLUDES += -I/opt/local/include
@@ -22,49 +19,23 @@ else
 	CXXFLAGS ?= -g -O2 -Wall -Woverloaded-virtual -Wno-parentheses
 endif
 
-##-- include /home/fred/Xbmc/Makefile.include
 AR=ar
 ARFLAGS=crus
 RM=rm -rf
 SHELL=/bin/bash
 ARCH=i486-linux
-abs_top_srcdir=/home/fred/xbmc_addon_fortherecord
-rel_top_srcdir=$(subst $(abspath $(abs_top_srcdir))/,,$(abspath $(CURDIR))/)
-prefix=/usr/local
-exec_prefix=${prefix}
-bindir=${exec_prefix}/bin
-sbindir=${exec_prefix}/sbin
-libexecdir=${exec_prefix}/libexec
-sysconfdir=${prefix}/etc
-sharedstatedir=${prefix}/com
-localstatedir=${prefix}/var
-libdir=${exec_prefix}/lib
-includedir=${prefix}/include
-oldincludedir=/usr/include
-datarootdir=${prefix}/share
-datadir=${datarootdir}
-infodir=${datarootdir}/info
-localedir=${datarootdir}/locale
-mandir=${datarootdir}/man
-PACKAGE_TARNAME=xbmc
-docdir=${datarootdir}/doc/${PACKAGE_TARNAME}
-htmldir=${docdir}
-dvidir=${docdir}
-pdfdir=${docdir}
-psdir=${docdir}
 CXX=/usr/bin/ccache g++
 CC=/usr/bin/ccache gcc
+abs_top_srcdir=/home/fred/xbmc_addon_fortherecord
+rel_top_srcdir=$(subst $(abspath $(abs_top_srcdir))/,,$(abspath $(CURDIR))/)
 CXXFLAGS+= -fPIC -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -DNDEBUG=1 -O2
 CFLAGS+= -fPIC -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -DNDEBUG=1 -O2
 LDFLAGS+=
 INCLUDES+=$(sort  -I$(abs_top_srcdir) -D_GNU_SOURCE=1 -D_REENTRANT)
 INCLUDES+=-I.
+INCLUDES+=-I/home/fred/xbmc-addon-fortherecord/xbmc
+INCLUDES+=-I/home/fred/xbmc-addon-fortherecord/xbmc/linux
 INCLUDES+=-I/home/fred/Xbmc/lib
-INCLUDES+=-I/home/fred/Xbmc/xbmc/linux
-INCLUDES+=-I/home/fred/Xbmc/addons/library.xbmc.addon
-INCLUDES+=-I/home/fred/Xbmc/addons/library.xbmc.pvr
-INCLUDES+=-I/home/fred/Xbmc/xbmc/addons/include/
-INCLUDES+=-I/home/fred/Xbmc/xbmc/cores/dvdplayer/DVDDemuxers
 DEFINES+= \
 	-DTARGET_POSIX -DTARGET_LINUX -D_LINUX \
 	-D_FILE_DEFINED \
@@ -104,7 +75,6 @@ GEN_DEPS=\
          -e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P \
   && rm -f $*.d \
   || ( rm -f $*.P $@ && exit 1 )
-
 %.o: %.cpp
 	@rm -f $@
 	$(SILENT_CPP) $(CXX) -MF $*.d -MD -c $(CXXFLAGS) $(DEFINES) $(INCLUDES) $< -o $@ \
