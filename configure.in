@@ -13,7 +13,7 @@ AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 
 dnl Setup for automake
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([-Wno-portability])
 
 dnl Check for tools
 
@@ -92,10 +92,6 @@ esac
 AC_SUBST(addon_suffix)
 
 # Finally create all the generated files
-#addons/Makefile
-#addons/pvr.vuplus/Makefile
-#addons/pvr.vuplus/addon.xml
-#src/vuplus/Makefile
 AC_OUTPUT([
 Makefile
 src/Makefile
