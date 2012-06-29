@@ -17,3 +17,13 @@
 .project
 .cproject
 
+#generated files etc.
+config.log
+config.status
+/aclocal.m4
+/libtool
+/autom4te.cache
+/autotools
+/configure
+Makefile.in
+/Makefile
