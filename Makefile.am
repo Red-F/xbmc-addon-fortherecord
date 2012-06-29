@@ -1,5 +1,7 @@
-## something something
-DATE = $(shell date +%Y%m%d)
+## Process this file with automake to produce Makefile.in
+
+ADDONSUFFIX = @addon_suffix@
+ADDONNAME = XBMC_ForTheRecord_@addon_suffix@.pvr
 
 SUBDIRS = \
 src
@@ -11,13 +13,13 @@ EXTRA_DIST = \
 include
 
 all:
-	echo cp -r ChangeLog addons/pvr.fortherecord/changelog.txt
+	cp -r ChangeLog addons/pvr.fortherecord.argus/changelog.txt
 
 dist-zip: all
-	echo cp -r addons/pvr.vuplus .
-	echo $(STRIP) -s -x pvr.vuplus/XBMC_vuplus.pvr
-	echo zip -9 -r ./pvr.vuplus-$(VERSION)-$(build_cpu).zip pvr.vuplus --exclude \*.am \*.in \*Makefile \*.gitignore
-	echo rm -Rf pvr.vuplus
+	cp -r addons/pvr.fortherecord.argus .
+	$(STRIP) -s -x ./pvr.fortherecord.argus/$(ADDONNAME)
+	zip -9 -r ./pvr.fortherecord.argus.$(VERSION).$(ADDONSUFFIX).zip pvr.fortherecord.argus
+	rm -Rf pvr.fortherecord.argus
 
 dist-zip-daily: all
 	echo cp -r addons/pvr.vuplus .

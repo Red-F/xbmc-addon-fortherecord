@@ -1,6 +1,7 @@
 m4_define([MAJOR], 0)
 m4_define([MINOR], 1)
 m4_define([MICRO], 140)
+m4_define(DATE, $(shell date +%Y%m%d))
 
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT([xbmc-addon-fortherecord], [MAJOR.MINOR.MICRO], [Fred Hoogduin])
@@ -30,23 +31,72 @@ AC_CHECK_HEADER([curl/curl.h],, AC_MSG_ERROR("Could not find curl library!"))
 AC_SUBST(VERSIONEXT)
 
 case $host in
+  i*86*-linux-gnu*)
+     ARCH="i486-linux"
+     AC_SUBST(ARCH_DEFINES, "-DTARGET_POSIX -DTARGET_LINUX -D_LINUX")
+     addon_suffix="linux"
+     ;;
+  x86_64-*-linux-gnu*)
+     ARCH="x86_64-linux"
+     AC_SUBST(ARCH_DEFINES, "-DTARGET_POSIX -DTARGET_LINUX -D_LINUX")
+     ADDON_SUFFIX="linux"
+     ;;
+  arm-apple-darwin*)
+     use_joystick=no
+     use_neon=yes
+     use_libcec=no
+     use_crystalhd=no
+     use_vdadecoder=no
+     use_vtbdecoder=yes
+     use_optical_drive=no
+     use_dvdcss=no
+     use_gles=yes
+     use_cpu=cortex-a8
+     check_sdl_arch=[`file /opt/local/lib/libSDL_image.dylib | awk '{V=7; print $V}'`]
+     if test "x$check_sdl_arch" = "xi386"; then
+       use_texturepacker_native=yes
+       USE_TEXTUREPACKER_NATIVE_ROOT="/opt/local"
+     else
+       use_texturepacker=no
+     fi
+     ARCH="arm-osx"
+     use_arch="arm"
+     PYTHON_VERSION="2.6"
+     PYTHON_LDFLAGS="-L${prefix}/lib -lpython2.6"
+     PYTHON_CPPFLAGS="-I${prefix}/include/python2.6"
+     PYTHON_SITE_PKG="${prefix}/lib/python2.6/site-packages"
+     PYTHON_NOVERSIONCHECK="no-check"
+     AC_SUBST(ARCH_DEFINES, "-DTARGET_POSIX -DTARGET_DARWIN -DTARGET_DARWIN_IOS -D_LINUX")
+     ADDON_SUFFIX="osx"
+     ;;
+  *86*-apple-darwin*)
+     use_joystick=no
+     use_vtbdecoder=no
+     use_texturepacker_native=yes
+     USE_TEXTUREPACKER_NATIVE_ROOT="$prefix"
+     ARCH="x86-osx"
+     AC_SUBST(ARCH_DEFINES, "-DTARGET_POSIX -DTARGET_DARWIN -DTARGET_DARWIN_OSX -D_LINUX")
+     ADDON_SUFFIX="osx"
+     ;;
   arm*-*-linux-gnu*)
-    AC_SUBST(ARCH_DEFINES, "-D_ARMEL")
-    ;;
-  powerpc-*-linux-gnu*)
-    AC_SUBST(ARCH_DEFINES, "-D_POWERPC")
-    ;;
-  powerpc64-*-linux-gnu*)
-    AC_SUBST(ARCH_DEFINES, "-D_POWERPC64")
-    ;;
+     use_texturepacker=no
+     ARCH="arm"
+     use_arch="arm"
+     AC_SUBST(ARCH_DEFINES, "-DTARGET_POSIX -DTARGET_LINUX -D_LINUX")
+     ADDON_SUFFIX="linux"
+     ;;
+  *)
+     AC_MSG_ERROR(unsupported host ($host))
 esac
+
+AC_SUBST(addon_suffix)
 
 # Finally create all the generated files
 #addons/Makefile
 #addons/pvr.vuplus/Makefile
 #addons/pvr.vuplus/addon.xml
-#src/Makefile
 #src/vuplus/Makefile
 AC_OUTPUT([
 Makefile
+src/Makefile
 ])
