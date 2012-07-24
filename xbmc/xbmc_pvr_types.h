@@ -158,8 +158,10 @@ extern "C" {
     bool bHandlesInputStream;           /*!< @brief (optional) true if this add-on provides an input stream. false if XBMC handles the stream. */
     bool bHandlesDemuxing;              /*!< @brief (optional) true if this add-on demultiplexes packets. */
     bool bSupportsRecordingFolders;     /*!< @brief (optional) true if the backend supports timers / recordings in folders. */
-    bool bSupportsRecordingPlayCount;   /*!< @brief (optional) true if the backend supports play count for recordings. */
-    bool bSupportsLastPlayedPosition;   /*!< @brief (optional) true if the backend supports store/retrieve of last played position for recordings. */
+
+		/* FRODO ONLY */
+    //bool bSupportsRecordingPlayCount;   /*!< @brief (optional) true if the backend supports play count for recordings. */
+    //bool bSupportsLastPlayedPosition;   /*!< @brief (optional) true if the backend supports store/retrieve of last played position for recordings. */
   } ATTRIBUTE_PACKED PVR_ADDON_CAPABILITIES;
 
   /*!
@@ -361,9 +363,11 @@ extern "C" {
     PVR_ERROR    (__cdecl* GetRecordings)(PVR_HANDLE handle);
     PVR_ERROR    (__cdecl* DeleteRecording)(const PVR_RECORDING &recording);
     PVR_ERROR    (__cdecl* RenameRecording)(const PVR_RECORDING &recording);
-    PVR_ERROR    (__cdecl* SetRecordingPlayCount)(const PVR_RECORDING &recording, int count);
-    PVR_ERROR    (__cdecl* SetRecordingLastPlayedPosition)(const PVR_RECORDING &recording, int lastplayedposition);
-    int          (__cdecl* GetRecordingLastPlayedPosition)(const PVR_RECORDING &recording);
+
+		/* FRODO ONLY */
+    //PVR_ERROR    (__cdecl* SetRecordingPlayCount)(const PVR_RECORDING &recording, int count);
+    //PVR_ERROR    (__cdecl* SetRecordingLastPlayedPosition)(const PVR_RECORDING &recording, int lastplayedposition);
+    //int          (__cdecl* GetRecordingLastPlayedPosition)(const PVR_RECORDING &recording);
     //@}
 
     /** @name PVR timer methods */

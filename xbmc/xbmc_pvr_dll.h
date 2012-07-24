@@ -207,7 +207,7 @@ extern "C"
    * @param count Play count.
    * @return PVR_ERROR_NO_ERROR if the recording's play count has been set successfully.
    */
-  PVR_ERROR SetRecordingPlayCount(const PVR_RECORDING &recording, int count);
+  //PVR_ERROR SetRecordingPlayCount(const PVR_RECORDING &recording, int count); //FRODO ONLY
 
   /*!
   * @brief Set the last watched position of a recording on the backend.
@@ -215,14 +215,14 @@ extern "C"
   * @param position The last watched position in seconds
   * @return PVR_ERROR_NO_ERROR if the position has been stored successfully.
   */
-  PVR_ERROR SetRecordingLastPlayedPosition(const PVR_RECORDING &recording, int lastplayedposition);
+  //PVR_ERROR SetRecordingLastPlayedPosition(const PVR_RECORDING &recording, int lastplayedposition); //FRODO ONLY
 
   /*!
   * @brief Retrieve the last watched position of a recording on the backend.
   * @param recording The recording.
   * @return The last watched position in seconds or -1 on error
   */
-  int GetRecordingLastPlayedPosition(const PVR_RECORDING &recording);
+  //int GetRecordingLastPlayedPosition(const PVR_RECORDING &recording); //FRODO ONLY
 
   //@}
   /** @name PVR timer methods */
@@ -429,9 +429,11 @@ extern "C"
     pClient->GetRecordings           = GetRecordings;
     pClient->DeleteRecording         = DeleteRecording;
     pClient->RenameRecording         = RenameRecording;
-    pClient->SetRecordingPlayCount   = SetRecordingPlayCount;
-    pClient->SetRecordingLastPlayedPosition = SetRecordingLastPlayedPosition;
-    pClient->GetRecordingLastPlayedPosition = GetRecordingLastPlayedPosition;
+
+		/* FRODO ONLY*/
+    //pClient->SetRecordingPlayCount   = SetRecordingPlayCount;
+    //pClient->SetRecordingLastPlayedPosition = SetRecordingLastPlayedPosition;
+    //pClient->GetRecordingLastPlayedPosition = GetRecordingLastPlayedPosition;
 
     pClient->GetTimersAmount         = GetTimersAmount;
     pClient->GetTimers               = GetTimers;
