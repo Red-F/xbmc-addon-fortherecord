@@ -314,7 +314,7 @@ extern "C" {
     int           iLifetime;            /*!< @brief (optional) life time in days of this recording */
     int           iGenreType;           /*!< @brief (optional) genre type */
     int           iGenreSubType;        /*!< @brief (optional) genre sub type */
-    bool          iPlayCount;           /*!< @brief (optional) play count of this recording on the client */
+    //bool          iPlayCount;           /*!< @brief (optional) play count of this recording on the client */ //FRODO ONLY
   } ATTRIBUTE_PACKED PVR_RECORDING;
 
   /*!
