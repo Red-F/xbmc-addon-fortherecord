@@ -311,11 +311,11 @@ PVR_ERROR cPVRClientForTheRecord::GetDriveSpace(long long *iTotal, long long *iU
 
   if (retval != E_FAILED)
   {
-    double _totalSize = response["TotalSizeBytes"].asDouble();
-    double _freeSize = response["FreeSpaceBytes"].asDouble();
+    double _totalSize = response["TotalSizeBytes"].asDouble()/1024;
+    double _freeSize = response["FreeSpaceBytes"].asDouble()/1024;
     *iTotal = (long long) _totalSize;
     *iUsed = (long long) (_totalSize - _freeSize);
-    XBMC->Log(LOG_DEBUG, "GetDriveSpace, %lld used bytes of %lld total bytes.", *iUsed, *iTotal);
+    XBMC->Log(LOG_DEBUG, "GetDriveSpace, %lld used kiloBytes of %lld total kiloBytes.", *iUsed, *iTotal);
   }
 
   return PVR_ERROR_NO_ERROR;
