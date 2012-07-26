@@ -91,7 +91,11 @@ bool cPVRClientForTheRecord::Connect()
   XBMC->Log(LOG_INFO, "Connect() - Connecting to %s", g_szBaseURL.c_str());
 
   int backendversion = FTR_REST_MAXIMUM_API_VERSION;
-  int rc = ForTheRecord::Ping(backendversion);
+  int rc = 2;
+	int attemps = 0;
+
+	ping:
+	rc = ForTheRecord::Ping(backendversion);
   if (rc == 1)
   {
     backendversion = FTR_REST_MINIMUM_API_VERSION;
@@ -113,6 +117,12 @@ bool cPVRClientForTheRecord::Connect()
     return false;
   default:
     XBMC->Log(LOG_ERROR, "Ping failed... No connection to ForTheRecord.\n");
+		if (attemps < 30)
+		{
+			attemps++;
+			usleep(1000000);
+			goto ping;
+		}
     return false;
   }
 
