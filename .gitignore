@@ -19,6 +19,7 @@ pvr.fortherecord.argus.*.zip
 #eclipse project files
 .project
 .cproject
+.settings
 
 #generated files etc.
 config.log
@@ -29,7 +30,7 @@ config.status
 /autotools
 /configure
 Makefile.in
-/Makefile
+Makefile
 .libs
 .deps
 
