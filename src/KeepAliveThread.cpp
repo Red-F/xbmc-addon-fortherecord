@@ -44,7 +44,7 @@ void *CKeepAliveThread::Process()
     int retval = ForTheRecord::KeepLiveStreamAlive();
     XBMC->Log(LOG_DEBUG, "CKeepAliveThread:: KeepLiveStreamAlive returned %i", (int) retval);
     // The new PLATFORM:: thread library has a problem with stopping a thread that is doing a long sleep
-    for (int i = 0; i < 200; i++)
+    for (int i = 0; i < 100; i++)
     {
       if (Sleep(100)) break;
     }
