@@ -28,9 +28,15 @@
 #define FTR_1_6_1_0 (49)
 #define FTR_REST_MINIMUM_API_VERSION FTR_1_6_0_1
 #define FTR_REST_MAXIMUM_API_VERSION FTR_1_6_1_0
+
+#define E_SUCCEEDED 0
 #define E_FAILED -1
 #define E_EMPTYRESPONSE -2
 #define E_NORETUNEPOSSIBLE -3
+#define E_NOFREETUNER -4
+#define E_SCRAMBLED -5
+#define E_TUNINGFAILED -6
+
 
 namespace ForTheRecord
 {
@@ -81,8 +87,9 @@ namespace ForTheRecord
     NoFreeCardFound = 1,
     ChannelTuneFailed = 2,
     NoReTunePossible = 3,
-    UnknownError = 4,
-    NotSupported = 5
+    IsScrambled = 4,
+    UnknownError = 98,
+    NotSupported = 99
   };
 
   /**

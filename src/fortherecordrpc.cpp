@@ -713,16 +713,28 @@ namespace ForTheRecord
         XBMC->Log(LOG_DEBUG, "TuneLiveStream result %d.", livestreamresult);
         if (livestreamresult != ForTheRecord::Succeed)
         {
-          if (livestreamresult != ForTheRecord::NoReTunePossible)
+          if (livestreamresult == ForTheRecord::NoReTunePossible)
           {
-            XBMC->Log(LOG_ERROR, "TuneLiveStream result %d.", livestreamresult);
-            return E_FAILED;
-          }
-          else
-          {
-            XBMC->Log(LOG_INFO, "Re-tune not possible.");
+            XBMC->Log(LOG_INFO, "No re-tune possible.");
             return E_NORETUNEPOSSIBLE;
           }
+          else if (livestreamresult == ForTheRecord::NoFreeCardFound)
+          {
+            XBMC->Log(LOG_INFO, "No free tuner found.");
+            return E_NOFREETUNER;
+          }
+          else if (livestreamresult == ForTheRecord::IsScrambled)
+          {
+            XBMC->Log(LOG_INFO, "Scrambled channel.");
+            return E_SCRAMBLED;
+          }
+          else if (livestreamresult == ForTheRecord::ChannelTuneFailed)
+          {
+            XBMC->Log(LOG_INFO, "Tuning failed.");
+            return E_TUNINGFAILED;
+          }
+          XBMC->Log(LOG_ERROR, "Tuning failed, unknown error");
+          return E_FAILED;
         }
 
         // Ok, pick up the returned LiveStream object
@@ -742,6 +754,7 @@ namespace ForTheRecord
         stream = g_current_livestream["RtspUrl"].asString();
 #endif
         XBMC->Log(LOG_DEBUG, "Tuned live stream: %s\n", stream.c_str());
+				return E_SUCCEEDED;
       }
       else
       {
@@ -753,7 +766,7 @@ namespace ForTheRecord
     {
       XBMC->Log(LOG_ERROR, "TuneLiveStream failed");
     }
-    return retval;
+    return E_FAILED;
   }
 
 

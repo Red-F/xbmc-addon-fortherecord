@@ -1125,8 +1125,9 @@ cChannel* cPVRClientForTheRecord::FetchChannel(std::string channelid, bool LogEr
 bool cPVRClientForTheRecord::_OpenLiveStream(const PVR_CHANNEL &channelinfo)
 {
   XBMC->Log(LOG_DEBUG, "->_OpenLiveStream(%i)", channelinfo.iUniqueId);
-
+  
   cChannel* channel = FetchChannel(channelinfo.iUniqueId);
+  bool firstAttemp = true;
 
   if (channel)
   {
@@ -1134,14 +1135,41 @@ bool cPVRClientForTheRecord::_OpenLiveStream(const PVR_CHANNEL &channelinfo)
     XBMC->Log(LOG_INFO, "Tune XBMC channel: %i", channelinfo.iUniqueId);
     XBMC->Log(LOG_INFO, "Corresponding ForTheRecord channel: %s", channel->Guid().c_str());
 
+    tune:
     int retval = ForTheRecord::TuneLiveStream(channel->Guid(), channel->Type(), channel->Name(), filename);
-    if (retval == E_NORETUNEPOSSIBLE)
+    
+    if (retval != E_SUCCEEDED)
     {
-      // Ok, we can't re-tune with the current live stream still running
-      // So stop it and re-try
-      CloseLiveStream();
-      XBMC->Log(LOG_INFO, "Re-Tune XBMC channel: %i", channelinfo.iUniqueId);
-      retval = ForTheRecord::TuneLiveStream(channel->Guid(), channel->Type(), channel->Name(), filename);
+      switch (retval)
+      {
+	case E_NORETUNEPOSSIBLE:
+	  if (firstAttemp)
+	  {
+	    // Ok, we can't re-tune with the current live stream still running
+	    // So stop it and re-try
+	    CloseLiveStream();
+	    XBMC->Log(LOG_INFO, "Re-Tune XBMC channel: %i", channelinfo.iUniqueId);
+	    firstAttemp = false;
+	    goto tune;
+	  }
+	  else
+	  {
+	    XBMC->QueueNotification(QUEUE_ERROR, "Unknown error!");
+	  }
+	  break;
+	case E_NOFREETUNER:
+	  XBMC->QueueNotification(QUEUE_ERROR, "No free tuner found!");
+	  break;
+	case E_SCRAMBLED:
+	  XBMC->QueueNotification(QUEUE_ERROR, "Scrambled channel!");
+	  break;
+	case E_TUNINGFAILED:
+	  XBMC->QueueNotification(QUEUE_ERROR, "Tuning failed!");
+	  break;
+	default:
+	  XBMC->QueueNotification(QUEUE_ERROR, "Unknown error!");
+	  break;
+      }
     }
 
 #if defined(TARGET_LINUX) || defined(TARGET_OSX)
@@ -1171,16 +1199,10 @@ bool cPVRClientForTheRecord::_OpenLiveStream(const PVR_CHANNEL &channelinfo)
     filename = CIFSname;
 #endif
 
-    if (retval < 0 || filename.length() == 0)
+    if (retval != E_SUCCEEDED || filename.length() == 0)
     {
       XBMC->Log(LOG_ERROR, "Could not start the timeshift for channel %i (%s)", channelinfo.iUniqueId, channel->Guid().c_str());
-      if (m_keepalive.IsRunning())
-      {
-        if (!m_keepalive.StopThread())
-        {
-          XBMC->Log(LOG_ERROR, "Stop keepalive thread failed.");
-        }
-      }
+      CloseLiveStream();
       return false;
     }
 
@@ -1237,9 +1259,10 @@ bool cPVRClientForTheRecord::_OpenLiveStream(const PVR_CHANNEL &channelinfo)
   {
     XBMC->Log(LOG_ERROR, "Could not get ForTheRecord channel guid for channel %i.", channelinfo.iUniqueId);
     XBMC->QueueNotification(QUEUE_ERROR, "XBMC Channel to GUID");
+    CloseLiveStream();
     return false;
   }
-
+  CloseLiveStream();
   return false;
 }
 
@@ -1568,7 +1591,7 @@ const char* cPVRClientForTheRecord::GetLiveStreamURL(const PVR_CHANNEL &channeli
 {
   XBMC->Log(LOG_DEBUG, "->GetLiveStreamURL(%i)", channelinfo.iUniqueId);
   bool rc = _OpenLiveStream(channelinfo);
-  if (!rc) rc = _OpenLiveStream(channelinfo);
+  if (!rc) rc = _OpenLiveStream(channelinfo); //TODO: why are we doing this 2 times?
   if (rc)
   {
     m_bTimeShiftStarted = true;
