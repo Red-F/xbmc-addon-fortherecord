@@ -1210,7 +1210,7 @@ namespace ForTheRecord
   /**
    * \brief Add a xbmc timer as a one time schedule
    */
-  int AddOneTimeSchedule(const std::string& channelid, const time_t starttime, const std::string& title, int prerecordseconds, int postrecordseconds, Json::Value& response)
+  int AddOneTimeSchedule(const std::string& channelid, const time_t starttime, const std::string& title, int prerecordseconds, int postrecordseconds, int lifetime, Json::Value& response)
   {
     int retval = -1;
 
@@ -1229,8 +1229,8 @@ namespace ForTheRecord
     std::string modifiedtime = TimeTToWCFDate(mktime(localtime(&now)));
     char arguments[1024];
     snprintf( arguments, sizeof(arguments),
-      "{\"ChannelType\":0,\"IsActive\":true,\"IsOneTime\":true,\"KeepUntilMode\":0,\"KeepUntilValue\":null,\"LastModifiedTime\":\"%s\",\"Name\":\"XBMC - %s\",\"PostRecordSeconds\":%i,\"PreRecordSeconds\":%i,\"ProcessingCommands\":[],\"RecordingFileFormatId\":null,\"Rules\":[{\"Arguments\":[\"%s\"],\"Type\":\"TitleEquals\"},{\"Arguments\":[\"%i-%02i-%02iT00:00:00\"],\"Type\":\"OnDate\"},{\"Arguments\":[\"%02i:%02i:%02i\"],\"Type\":\"AroundTime\"},{\"Arguments\":[\"%s\"],\"Type\":\"Channels\"}],\"ScheduleId\":\"00000000-0000-0000-0000-000000000000\",\"SchedulePriority\":0,\"ScheduleType\":82,\"Version\":0}",
-      modifiedtime.c_str(), title.c_str(), postrecordseconds, prerecordseconds, title.c_str(),
+      "{\"ChannelType\":0,\"IsActive\":true,\"IsOneTime\":true,\"KeepUntilMode\":\"%i\",\"KeepUntilValue\":\"%i\",\"LastModifiedTime\":\"%s\",\"Name\":\"XBMC - %s\",\"PostRecordSeconds\":%i,\"PreRecordSeconds\":%i,\"ProcessingCommands\":[],\"RecordingFileFormatId\":null,\"Rules\":[{\"Arguments\":[\"%s\"],\"Type\":\"TitleEquals\"},{\"Arguments\":[\"%i-%02i-%02iT00:00:00\"],\"Type\":\"OnDate\"},{\"Arguments\":[\"%02i:%02i:%02i\"],\"Type\":\"AroundTime\"},{\"Arguments\":[\"%s\"],\"Type\":\"Channels\"}],\"ScheduleId\":\"00000000-0000-0000-0000-000000000000\",\"SchedulePriority\":0,\"ScheduleType\":82,\"Version\":0}",
+      lifetimeToKeepUntilMode(lifetime), lifetimeToKeepUntilValue(lifetime), modifiedtime.c_str(), title.c_str(), postrecordseconds, prerecordseconds, title.c_str(),
       tm_start.tm_year + 1900, tm_start.tm_mon + 1, tm_start.tm_mday,
       tm_start.tm_hour, tm_start.tm_min, tm_start.tm_sec,
       channelid.c_str());
@@ -1256,7 +1256,7 @@ namespace ForTheRecord
   /**
    * \brief Add a xbmc timer as a manual schedule
    */
-  int AddManualSchedule(const std::string& channelid, const time_t starttime, const time_t duration, const std::string& title, int prerecordseconds, int postrecordseconds, Json::Value& response)
+  int AddManualSchedule(const std::string& channelid, const time_t starttime, const time_t duration, const std::string& title, int prerecordseconds, int postrecordseconds, int lifetime, Json::Value& response)
   {
     int retval = -1;
 
@@ -1281,9 +1281,9 @@ namespace ForTheRecord
     std::string modifiedtime = TimeTToWCFDate(mktime(localtime(&now)));
     char arguments[1024];
     snprintf( arguments, sizeof(arguments),
-      "{\"ChannelType\":0,\"IsActive\":true,\"IsOneTime\":true,\"KeepUntilMode\":0,\"KeepUntilValue\":null,\"LastModifiedTime\":\"%s\",\"Name\":\"XBMC (manual) - %s\",\"PostRecordSeconds\":%i,\"PreRecordSeconds\":%i,\"ProcessingCommands\":[],\"RecordingFileFormatId\":null,"
+      "{\"ChannelType\":0,\"IsActive\":true,\"IsOneTime\":true,\"KeepUntilMode\":\"%i\",\"KeepUntilValue\":\"%i\",\"LastModifiedTime\":\"%s\",\"Name\":\"XBMC (manual) - %s\",\"PostRecordSeconds\":%i,\"PreRecordSeconds\":%i,\"ProcessingCommands\":[],\"RecordingFileFormatId\":null,"
       "\"Rules\":[{\"Arguments\":[\"%i-%02i-%02iT%02i:%02i:%02i\", \"%02i:%02i:%02i\"],\"Type\":\"ManualSchedule\"},{\"Arguments\":[\"%s\"],\"Type\":\"Channels\"}],\"ScheduleId\":\"00000000-0000-0000-0000-000000000000\",\"SchedulePriority\":0,\"ScheduleType\":82,\"Version\":0}",
-      modifiedtime.c_str(), title.c_str(), postrecordseconds, prerecordseconds,
+      lifetimeToKeepUntilMode(lifetime), lifetimeToKeepUntilValue(lifetime), modifiedtime.c_str(), title.c_str(), postrecordseconds, prerecordseconds,
       tm_start.tm_year + 1900, tm_start.tm_mon + 1, tm_start.tm_mday,
       tm_start.tm_hour, tm_start.tm_min, tm_start.tm_sec,
       duration_hrs, duration_min, duration_sec,
@@ -1366,6 +1366,32 @@ namespace ForTheRecord
     return retval;
   }
 
+  /**
+   * \brief Convert a XBMC Lifetime value to the 4TR keepUntilMode setting
+   * \param lifetime the XBMC lifetime value (in days) 
+   */
+  int lifetimeToKeepUntilMode(int lifetime)
+  {
+    if (lifetime > 364)
+      return ForTheRecord::Forever;
+
+    if (lifetime < 2)
+      return ForTheRecord::UntilSpaceIsNeeded;
+    
+    return ForTheRecord::NumberOfDays;
+  }
+
+  /**
+   * \brief Convert a XBMC Lifetime value to the 4TR keepUntilValue setting
+   * \param lifetime the XBMC lifetime value (in days) 
+   */
+  int lifetimeToKeepUntilValue(int lifetime)
+  {
+    if (lifetime > 364 || lifetime < 2)
+      return 0;
+
+    return lifetime;
+  }
 
   time_t WCFDateToTimeT(const std::string& wcfdate, int& offset)
   {
