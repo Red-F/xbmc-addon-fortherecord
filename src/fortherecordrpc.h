@@ -265,12 +265,12 @@ namespace ForTheRecord
   /**
    * \brief Add a xbmc timer as a one time schedule
    */
-  int AddOneTimeSchedule(const std::string& channelid, const time_t starttime, const std::string& title, int prerecordseconds, int postrecordseconds, Json::Value& response);
+  int AddOneTimeSchedule(const std::string& channelid, const time_t starttime, const std::string& title, int prerecordseconds, int postrecordseconds, int lifetime, Json::Value& response);
 
   /**
    * \brief Add a xbmc timer as a manual schedule
    */
-  int AddManualSchedule(const std::string& channelid, const time_t starttime, const time_t duration, const std::string& title, int prerecordseconds, int postrecordseconds, Json::Value& response);
+  int AddManualSchedule(const std::string& channelid, const time_t starttime, const time_t duration, const std::string& title, int prerecordseconds, int postrecordseconds, int lifetime, Json::Value& response);
 
   /**
    * \brief Delete a ForTheRecord schedule
@@ -303,6 +303,18 @@ namespace ForTheRecord
    * \param channelGUID GUID of the channel
    */
   std::string GetChannelLogo(const std::string& channelGUID);
+
+  /*
+   * \brief Convert a XBMC Lifetime value to the 4TR keepUntilMode setting
+   * \param lifetime the XBMC lifetime value (in days) 
+   */
+  int lifetimeToKeepUntilMode(int lifetime);
+
+  /*
+   * \brief Convert a XBMC Lifetime value to the 4TR keepUntilValue setting
+   * \param lifetime the XBMC lifetime value (in days) 
+   */
+  int lifetimeToKeepUntilValue(int lifetime);
 
   time_t WCFDateToTimeT(const std::string& wcfdate, int& offset);
   std::string TimeTToWCFDate(const time_t thetime);
