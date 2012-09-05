@@ -1050,22 +1050,28 @@ PVR_ERROR cPVRClientForTheRecord::DeleteTimer(const PVR_TIMER &timerinfo, bool f
                 }
               }
             }
-            retval = ForTheRecord::CancelUpcomingProgram(upcomingrecording.ScheduleId(), upcomingrecording.ChannelId(),
-              upcomingrecording.StartTime(), upcomingrecording.UpcomingProgramId());
-            if (retval < 0) 
-            {
-              XBMC->Log(LOG_ERROR, "Unable to cancel upcoming program from server.");
-              return PVR_ERROR_SERVER_ERROR;
-            }
+
             Json::Value scheduleResponse;
             retval = ForTheRecord::GetScheduleById(upcomingrecording.ScheduleId(), scheduleResponse);
             std::string schedulename = scheduleResponse["Name"].asString();
-            if (schedulename.substr(0, 7) == "XBMC - ")
+
+            if (scheduleResponse["IsOneTime"].asBool() == true)
             {
               retval = ForTheRecord::DeleteSchedule(upcomingrecording.ScheduleId());
+              if (retval < 0) 	
+              {
+                XBMC->Log(LOG_NOTICE, "Unable to delete schedule %s from server.", schedulename.c_str());
+                return PVR_ERROR_SERVER_ERROR;
+              }
+            }
+            else
+            {
+              retval = ForTheRecord::CancelUpcomingProgram(upcomingrecording.ScheduleId(), upcomingrecording.ChannelId(), 
+                upcomingrecording.StartTime(), upcomingrecording.GuideProgramId());
               if (retval < 0) 
               {
-                XBMC->Log(LOG_NOTICE, "Unable to cancel schedule %s from server.", schedulename.c_str());
+                XBMC->Log(LOG_ERROR, "Unable to cancel upcoming program from server.");
+                return PVR_ERROR_SERVER_ERROR;	
               }
             }
 
