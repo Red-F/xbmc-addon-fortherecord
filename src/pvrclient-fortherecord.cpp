@@ -91,29 +91,39 @@ bool cPVRClientForTheRecord::Connect()
   XBMC->Log(LOG_INFO, "Connect() - Connecting to %s", g_szBaseURL.c_str());
 
   int backendversion = FTR_REST_MAXIMUM_API_VERSION;
-  int rc = ForTheRecord::Ping(backendversion);
-  if (rc == 1)
+  int rc = -2;
+  int attemps = 0;
+
+  while (rc != 0)
   {
-    backendversion = FTR_REST_MINIMUM_API_VERSION;
+    attemps++;
     rc = ForTheRecord::Ping(backendversion);
-  }
+    if (rc == 1)
+    {
+      backendversion = FTR_REST_MINIMUM_API_VERSION;
+      rc = ForTheRecord::Ping(backendversion);
+    }
+    m_iBackendVersion = backendversion;
 
-  m_iBackendVersion = backendversion;
-
-  switch (rc)
-  {
-  case 0:
-    XBMC->Log(LOG_INFO, "Ping Ok. The client and server are compatible, API version %d.\n", m_iBackendVersion);
-    break;
-  case -1:
-    XBMC->Log(LOG_NOTICE, "Ping Ok. The client is too old for the server.\n");
-    return false;
-  case 1:
-    XBMC->Log(LOG_NOTICE, "Ping Ok. The client is too new for the server.\n");
-    return false;
-  default:
-    XBMC->Log(LOG_ERROR, "Ping failed... No connection to ForTheRecord.\n");
-    return false;
+    switch (rc)
+    {
+      case 0:
+        XBMC->Log(LOG_INFO, "Ping Ok. The client and server are compatible, API version %d.\n", m_iBackendVersion);
+        break;
+      case -1:
+        XBMC->Log(LOG_NOTICE, "Ping Ok. The client is too old for the server.\n");
+        return false;
+      case 1:
+        XBMC->Log(LOG_NOTICE, "Ping Ok. The client is too new for the server.\n");
+        return false;
+      default:
+         XBMC->Log(LOG_ERROR, "Ping failed... No connection to ForTheRecord.\n");
+         usleep(1000000);
+         if (attemps > 30)
+         {
+           return false;
+         }
+    }
   }
 
   // Check the accessibility status of all the shares used by ForTheRecord tuners
