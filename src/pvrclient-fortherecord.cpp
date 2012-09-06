@@ -60,7 +60,7 @@ cPVRClientForTheRecord::cPVRClientForTheRecord()
 #endif
   m_channel_id_offset      = 0;
   m_epg_id_offset          = 0;
-  m_iCurrentChannel        = 0;
+  m_iCurrentChannel        = -1;
   // due to lack of static constructors, we initialize manually
   ForTheRecord::Initialize();
 #if defined(FTR_DUMPTS)
@@ -1386,7 +1386,7 @@ void cPVRClientForTheRecord::CloseLiveStream()
 #endif
     ForTheRecord::StopLiveStream();
     m_bTimeShiftStarted = false;
-    m_iCurrentChannel = 0;
+    m_iCurrentChannel = -1;
   } else {
     XBMC->Log(LOG_DEBUG, "CloseLiveStream: Nothing to do.");
   }
