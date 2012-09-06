@@ -32,7 +32,7 @@ libfortherecord_la_SOURCES = \
 
 AM_CPPFLAGS = $(ARCH_DEFINES) -DTSREADER -fPIC -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -DNDEBUG=1 -O2
 
-INCLUDES = -I$(abs_top_srcdir)/xbmc -I$(abs_top_srcdir)/xbmc/linux -I$(srcdir)/lib/jsoncpp/include/ -I$(srcdir)/lib/filesystem/
+INCLUDES = -I$(abs_top_srcdir)/xbmc -I$(abs_top_srcdir)/include -I$(abs_top_srcdir)/include/linux -I$(srcdir)/lib/jsoncpp/include/ -I$(srcdir)/lib/filesystem/
 
 XBMC_fortherecord.pvr: libfortherecord.la
 	cp -f .libs/libfortherecord.so XBMC_fortherecord.pvr
