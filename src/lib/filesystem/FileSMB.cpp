@@ -23,12 +23,12 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "os-dependent.h"
 #include <inttypes.h>
 #include "client.h"
 #include "FileSMB.h"
 #include <libsmbclient.h>
 #include "platform/threads/mutex.h"
+#include "os-dependent.h"
 
 using namespace ADDON;
 
@@ -116,7 +116,7 @@ void CSMB::Init()
       fprintf(f, "\tsocket options = TCP_NODELAY IPTOS_LOWDELAY SO_RCVBUF=65536 SO_SNDBUF=65536\n");      
       fprintf(f, "\tlock directory = %s/.smb/\n", getenv("HOME"));
 
-      fprintf(f, "\tname resolve order = bcast host\n");
+      fprintf(f, "\tname resolve order = lmhosts bcast host\n");
 
       fclose(f);
     }
@@ -145,8 +145,7 @@ void CSMB::Init()
     m_context->callbacks.get_cached_srv_fn = xb_smbc_cache;
     m_context->options.one_share_per_server = false;
     m_context->options.browse_max_lmb_count = 0;
-    // NOTE: it would be nice to make this configurable
-    m_context->timeout = 10000;
+    m_context->timeout = 10000; //g_advancedSettings.m_sambaclienttimeout * 1000;
 #endif
 
     // initialize samba and do some hacking into the settings
@@ -259,13 +258,6 @@ bool CFile::Open(const CStdString& strFileName, unsigned int flags)
 {
   Close();
 
-  // we can't open files like smb://file.f or smb://server/file.f
-  // if a file matches the if below return false, it can't exist on a samba share.
-//  if (!IsValidFile(url.GetFileName()))
-//  {
-//      XBMC->Log(LOG_NOTICE,"FileSmb->Open: Bad URL : '%s'",url.GetFileName().c_str());
-//      return false;
-//  }
   m_fileName = strFileName;
 
   m_fd = OpenFile();
@@ -318,9 +310,6 @@ int CFile::OpenFile()
     XBMC->Log(LOG_ERROR, "%s: File open on %s failed\n", __FUNCTION__, strPath.c_str());
   }
 
-//  if (fd >= 0)
-//    strAuth = strPath;
-
   return fd;
 }
 
@@ -337,7 +326,8 @@ bool CFile::Exists(const CStdString& strFileName, bool bUseCache)
   CLockObject lock(smb);
   int iResult = smbc_stat(strFileName, &info);
 
-  if (iResult < 0) return false;
+  if (iResult < 0)
+    return false;
   return true;
 }
 
@@ -369,17 +359,19 @@ int CFile::Stat(struct stat64* buffer)
 
 unsigned long CFile::Read(void* lpBuf, int64_t uiBufSize)
 {
-  if (m_fd == -1) return 0;
+  if (m_fd == -1)
+    return 0;
+
   CLockObject lock(smb); // Init not called since it has to be "inited" by now
   smb.SetActivityTime();
   /* work around stupid bug in samba */
-  /* some samba servers has a bug in it where the */
+  /* some samba servers have a bug in it where the */
   /* 17th bit will be ignored in a request of data */
   /* this can lead to a very small return of data */
   /* also worse, a request of exactly 64k will return */
   /* as if eof, client has a workaround for windows */
   /* thou it seems other servers are affected too */
-  if( uiBufSize >= 64*1024-2 )
+  if ( uiBufSize >= 64*1024-2 )
     uiBufSize = 64*1024-2;
 
   int bytesRead = smbc_read(m_fd, lpBuf, (int)uiBufSize);
@@ -396,12 +388,13 @@ unsigned long CFile::Read(void* lpBuf, int64_t uiBufSize)
     return 0;
   }
 
-  return (unsigned int)bytesRead;
+  return (unsigned int) bytesRead;
 }
 
 int64_t CFile::Seek(int64_t iFilePosition, int iWhence)
 {
-  if (m_fd == -1) return -1;
+  if (m_fd == -1)
+    return -1;
 
   CLockObject lock(smb); // Init not called since it has to be "inited" by now
   smb.SetActivityTime();

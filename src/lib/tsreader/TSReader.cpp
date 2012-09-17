@@ -27,11 +27,7 @@
 #include "client.h" //for XBMC->Log
 #include "MultiFileReader.h"
 #include "utils.h"
-#if !defined(TARGET_WINDOWS)
-#include "PlatformDefs.h"
-#include "limits.h"
-#define _strcmpi strcasecmp
-#endif
+#include "os-dependent.h"
 
 using namespace ADDON;
 
@@ -56,7 +52,8 @@ long CTsReader::Open(const char* pszFileName)//, const AM_MEDIA_TYPE *pmt)
 
   //check file type
   int length = strlen(url);
-  if ((length < 9) || (_strcmpi(&url[length-9], ".tsbuffer") != 0))
+
+  if ((length < 9) || (strnicmp(&url[length-9], ".tsbuffer", 9) != 0))
   {
     //local .ts file
     m_bTimeShifting = false;

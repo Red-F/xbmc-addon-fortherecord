@@ -44,10 +44,6 @@
 #include <semaphore.h>
 #include <stdint.h>
 
-extern "C" {
-#include <sys/types.h>
-}
-
 #define LIBTYPE
 #define DECLSPEC
 

@@ -41,15 +41,11 @@ namespace PLATFORM
     CThread(void) :
         m_bStop(false),
         m_bRunning(false),
-        m_bStopped(false),
-        m_thread(INVALID_THREAD_VALUE) {}
+        m_bStopped(false) {}
 
     virtual ~CThread(void)
     {
       StopThread(0);
-      void *retVal = NULL;
-      if (m_thread != INVALID_THREAD_VALUE)
-        ThreadsWait(m_thread, &retVal);
     }
 
     static void *ThreadHandler(CThread *thread)
@@ -92,18 +88,18 @@ namespace PLATFORM
 
     virtual bool CreateThread(bool bWait = true)
     {
-      bool bReturn(false);
-      CLockObject lock(m_threadMutex);
-      if (!IsRunning())
-      {
-        m_bStop = false;
-        if (ThreadsCreate(m_thread, CThread::ThreadHandler, ((void*)static_cast<CThread *>(this))))
+        bool bReturn(false);
+        CLockObject lock(m_threadMutex);
+        if (!IsRunning())
         {
-          if (bWait)
-            m_threadCondition.Wait(m_threadMutex, m_bRunning);
-          bReturn = true;
+          m_bStop = false;
+          if (ThreadsCreate(m_thread, CThread::ThreadHandler, ((void*)static_cast<CThread *>(this))))
+          {
+            if (bWait)
+              m_threadCondition.Wait(m_threadMutex, m_bRunning);
+            bReturn = true;
+          }
         }
-      }
       return bReturn;
     }
 
@@ -144,13 +140,13 @@ namespace PLATFORM
 
   protected:
     void SetRunning(bool bSetTo);
-    CMutex           m_threadMutex;
 
   private:
     bool             m_bStop;
     bool             m_bRunning;
     bool             m_bStopped;
     CCondition<bool> m_threadCondition;
+    CMutex           m_threadMutex;
     thread_t         m_thread;
   };
 };

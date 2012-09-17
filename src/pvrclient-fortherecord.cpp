@@ -39,7 +39,7 @@ using namespace std;
 using namespace ADDON;
 
 #if !defined(TARGET_WINDOWS)
-#include "DirectorySMB.h"
+#include "lib/filesystem/DirectorySMB.h"
 using namespace PLATFORM;
 #endif
 
@@ -214,7 +214,7 @@ bool cPVRClientForTheRecord::ShareErrorsFound(void)
         accessMsg = (char*) lpMsgBuf;
         LocalFree(lpMsgBuf);
       }
-#elif defined(TARGET_LINUX) || defined(TARGET_OSX)
+#elif defined(TARGET_LINUX) || defined(TARGET_DARWIN)
       std::string CIFSname = sharename;
       std::string SMBPrefix = "smb://";
       if (g_szUser.length() > 0)
@@ -339,7 +339,7 @@ PVR_ERROR cPVRClientForTheRecord::GetBackendTime(time_t *localTime, int *gmtOffs
 /************************************************************/
 /** EPG handling */
 
-PVR_ERROR cPVRClientForTheRecord::GetEpg(PVR_HANDLE handle, const PVR_CHANNEL &channel, time_t iStart, time_t iEnd)
+PVR_ERROR cPVRClientForTheRecord::GetEpg(ADDON_HANDLE handle, const PVR_CHANNEL &channel, time_t iStart, time_t iEnd)
 {
   XBMC->Log(LOG_DEBUG, "->RequestEPGForChannel(%i)", channel.iUniqueId);
 
@@ -459,7 +459,7 @@ int cPVRClientForTheRecord::GetNumChannels()
   return numberofchannels;
 }
 
-PVR_ERROR cPVRClientForTheRecord::GetChannels(PVR_HANDLE handle, bool bRadio)
+PVR_ERROR cPVRClientForTheRecord::GetChannels(ADDON_HANDLE handle, bool bRadio)
 {
   Json::Value response;
   int retval = -1;
@@ -500,23 +500,23 @@ PVR_ERROR cPVRClientForTheRecord::GetChannels(PVR_HANDLE handle, bool bRadio)
           tag.iChannelNumber = FetchChannel(channel.Guid())->ID();
         }
         tag.iUniqueId = tag.iChannelNumber;
-        tag.strChannelName = channel.Name();
+        strncpy(tag.strChannelName, channel.Name(), sizeof(tag.strChannelName));
         std::string logopath = ForTheRecord::GetChannelLogo(channel.Guid()).c_str();
-        tag.strIconPath = logopath.c_str();
+        strncpy(tag.strIconPath, logopath.c_str(), sizeof(tag.strIconPath));
         tag.iEncryptionSystem = -1; //How to fetch this from ForTheRecord??
         tag.bIsRadio = (channel.Type() == ForTheRecord::Radio ? true : false);
         tag.bIsHidden = false;
         //Use OpenLiveStream to read from the timeshift .ts file or an rtsp stream
 #ifdef TSREADER
-        tag.strStreamURL = "";
-        tag.strInputFormat = "video/x-mpegts";
+        memset(tag.strStreamURL, 0, sizeof(tag.strStreamURL));
+        strncpy(tag.strInputFormat, "video/x-mpegts", sizeof(tag.strInputFormat));
 #else
         //Use GetLiveStreamURL to fetch an rtsp stream
         if(bRadio)
-          tag.strStreamURL = "pvr://stream/radio/%i.ts"; //stream.c_str();
+          strncpy(tag.strStreamURL, "pvr://stream/radio/%i.ts", sizeof(tag.strStreamURL)); //stream.c_str();
         else
-          tag.strStreamURL = "pvr://stream/tv/%i.ts"; //stream.c_str();
-        tag.strInputFormat = "";
+          strncpy(tag.strStreamURL, "pvr://stream/tv/%i.ts", sizeof(tag.strStreamURL)); //stream.c_str();
+        memset(tag.strInputFormat, 0, sizeof(tag.strInputFormat));
 #endif
 
         if (!tag.bIsRadio)
@@ -558,7 +558,7 @@ int cPVRClientForTheRecord::GetChannelGroupsAmount(void)
   return num;
 }
 
-PVR_ERROR cPVRClientForTheRecord::GetChannelGroups(PVR_HANDLE handle, bool bRadio)
+PVR_ERROR cPVRClientForTheRecord::GetChannelGroups(ADDON_HANDLE handle, bool bRadio)
 {
   Json::Value response;
   int retval;
@@ -591,7 +591,7 @@ PVR_ERROR cPVRClientForTheRecord::GetChannelGroups(PVR_HANDLE handle, bool bRadi
       memset(&tag, 0 , sizeof(PVR_CHANNEL_GROUP));
 
       tag.bIsRadio     = bRadio;
-      tag.strGroupName = name.c_str();
+      strncpy(tag.strGroupName, name.c_str(), sizeof(tag.strGroupName));
 
       PVR->TransferChannelGroup(handle, &tag);
     }
@@ -603,7 +603,7 @@ PVR_ERROR cPVRClientForTheRecord::GetChannelGroups(PVR_HANDLE handle, bool bRadi
   }
 }
 
-PVR_ERROR cPVRClientForTheRecord::GetChannelGroupMembers(PVR_HANDLE handle, const PVR_CHANNEL_GROUP &group)
+PVR_ERROR cPVRClientForTheRecord::GetChannelGroupMembers(ADDON_HANDLE handle, const PVR_CHANNEL_GROUP &group)
 {
   Json::Value response;
   int retval;
@@ -662,7 +662,7 @@ PVR_ERROR cPVRClientForTheRecord::GetChannelGroupMembers(PVR_HANDLE handle, cons
     PVR_CHANNEL_GROUP_MEMBER tag;
     memset(&tag,0 , sizeof(PVR_CHANNEL_GROUP_MEMBER));
 
-    tag.strGroupName     = group.strGroupName;
+    strncpy(tag.strGroupName, group.strGroupName, sizeof(tag.strGroupName));
     tag.iChannelUniqueId = pChannel->ID();
     tag.iChannelNumber   = index+1;
 
@@ -702,7 +702,7 @@ int cPVRClientForTheRecord::GetNumRecordings(void)
   return iNumRecordings;
 }
 
-PVR_ERROR cPVRClientForTheRecord::GetRecordings(PVR_HANDLE handle)
+PVR_ERROR cPVRClientForTheRecord::GetRecordings(ADDON_HANDLE handle)
 {
   Json::Value recordinggroupresponse;
   int retval = -1;
@@ -728,7 +728,6 @@ PVR_ERROR cPVRClientForTheRecord::GetRecordings(PVR_HANDLE handle)
           for (int recordingindex = 0; recordingindex < nrOfRecordings; recordingindex++)
           {
             cRecording recording;
-            CStdString strRecordingId;
 
             cRecordingSummary recordingsummary;
             if (recordingsummary.Parse(recordingsbytitleresponse[recordingindex]) && FetchRecordingDetails(recordingsummary.RecordingId(), recording))
@@ -736,34 +735,26 @@ PVR_ERROR cPVRClientForTheRecord::GetRecordings(PVR_HANDLE handle)
               PVR_RECORDING tag;
               memset(&tag, 0 , sizeof(tag));
 
-              strRecordingId.Format("%i", iNumRecordings);
-              tag.strRecordingId = recording.RecordingId();
-              tag.strChannelName = recording.ChannelDisplayName();
+              strncpy(tag.strRecordingId, recording.RecordingId(), sizeof(tag.strRecordingId));
+              strncpy(tag.strChannelName, recording.ChannelDisplayName(), sizeof(tag.strChannelName));
               tag.iLifetime      = MAXLIFETIME; //TODO: recording.Lifetime();
               tag.iPriority      = 0; //TODO? recording.Priority();
               tag.recordingTime  = recording.RecordingStartTime();
               tag.iDuration      = recording.RecordingStopTime() - recording.RecordingStartTime();
-              tag.strPlot        = recording.Description();
+              strncpy(tag.strPlot, recording.Description(), sizeof(tag.strPlot));
               if (nrOfRecordings > 1)
               {
                 recording.Transform(true);
-                tag.strDirectory = recordinggroup.ProgramTitle().c_str(); //used in XBMC as directory structure below "Server X - hostname"
+                strncpy(tag.strDirectory, recordinggroup.ProgramTitle().c_str(), sizeof(tag.strDirectory)); //used in XBMC as directory structure below "Server X - hostname"
               }
               else
               {
                 recording.Transform(false);
-                tag.strDirectory = "";
+                tag.strDirectory[0] = '\0';
               }
-              tag.strTitle       = recording.Title();
-              tag.strPlotOutline = recording.SubTitle();
-              std::string emptystring;
-              emptystring.clear();
-              tag.strStreamURL   = emptystring.c_str();
-//#ifdef _WIN32
-              //tag.strStreamURL   = recording.RecordingFileName();
-//#else
-//              tag.strStreamURL   = recording.CIFSRecordingFileName();
-//#endif
+              strncpy(tag.strTitle, recording.Title(), sizeof(tag.strTitle));
+              strncpy(tag.strPlotOutline, recording.SubTitle(), sizeof(tag.strPlotOutline));
+              tag.strStreamURL[0] = '\0';
               PVR->TransferRecordingEntry(handle, &tag);
               iNumRecordings++;
             }
@@ -794,7 +785,7 @@ bool cPVRClientForTheRecord::FetchRecordingDetails(std::string recordingid, cRec
 
 PVR_ERROR cPVRClientForTheRecord::DeleteRecording(const PVR_RECORDING &recinfo)
 {
-  PVR_ERROR rc = PVR_ERROR_NOT_DELETED;
+  PVR_ERROR rc = PVR_ERROR_FAILED;
 
   XBMC->Log(LOG_DEBUG, "->DeleteRecording(%s)", recinfo.strRecordingId);
 
@@ -841,7 +832,7 @@ int cPVRClientForTheRecord::GetNumTimers(void)
   return response.size();
 }
 
-PVR_ERROR cPVRClientForTheRecord::GetTimers(PVR_HANDLE handle)
+PVR_ERROR cPVRClientForTheRecord::GetTimers(ADDON_HANDLE handle)
 {
   Json::Value activeRecordingsResponse, upcomingProgramsResponse;
   int         iNumberOfTimers = 0;
@@ -912,9 +903,9 @@ PVR_ERROR cPVRClientForTheRecord::GetTimers(PVR_HANDLE handle)
         }
       }
 
-      tag.strTitle          = upcomingrecording.Title().c_str();
-      tag.strDirectory      = "";
-      tag.strSummary        = "";
+      strncpy(tag.strTitle, upcomingrecording.Title().c_str(), sizeof(tag.strTitle));
+      tag.strDirectory[0]   = '\0';
+      tag.strSummary[0]     = '\0';
       tag.iPriority         = 0;
       tag.iLifetime         = 0;
       tag.bIsRepeating      = false;
@@ -950,7 +941,7 @@ PVR_ERROR cPVRClientForTheRecord::AddTimer(const PVR_TIMER &timerinfo)
     XBMC->Log(LOG_ERROR, "Unable to translate XBMC channel %d to ForTheRecord channel GUID, timer not added.",
       timerinfo.iClientChannelUid);
     XBMC->QueueNotification(QUEUE_ERROR, "XBMC Channel to GUID");
-    return PVR_ERROR_NOT_POSSIBLE;
+    return PVR_ERROR_SERVER_ERROR;
   }
 
   Json::Value addScheduleResponse;
@@ -1006,7 +997,7 @@ PVR_ERROR cPVRClientForTheRecord::DeleteTimer(const PVR_TIMER &timerinfo, bool f
     XBMC->Log(LOG_ERROR, "Unable to translate XBMC channel %d to ForTheRecord channel GUID, timer not deleted.",
       timerinfo.iClientChannelUid);
     XBMC->QueueNotification(QUEUE_ERROR, "XBMC Channel to GUID");
-    return PVR_ERROR_NOT_POSSIBLE;
+    return PVR_ERROR_SERVER_ERROR;
   }
 
   // retrieve the currently active recordings
@@ -1093,7 +1084,7 @@ PVR_ERROR cPVRClientForTheRecord::DeleteTimer(const PVR_TIMER &timerinfo, bool f
       }
     }
   }
-  return PVR_ERROR_NOT_POSSIBLE;
+  return PVR_ERROR_SERVER_ERROR;
 }
 
 PVR_ERROR cPVRClientForTheRecord::UpdateTimer(const PVR_TIMER &timerinfo)
@@ -1160,7 +1151,7 @@ bool cPVRClientForTheRecord::_OpenLiveStream(const PVR_CHANNEL &channelinfo)
       retval = ForTheRecord::TuneLiveStream(channel->Guid(), channel->Type(), channel->Name(), filename);
     }
 
-#if defined(TARGET_LINUX) || defined(TARGET_OSX)
+#if defined(TARGET_LINUX) || defined(TARGET_DARWIN)
     // TODO FHo: merge this code and the code that translates names from recordings
     std::string CIFSname = filename;
     std::string SMBPrefix = "smb://";
@@ -1326,30 +1317,42 @@ long long cPVRClientForTheRecord::SeekLiveStream(long long pos, int whence)
 {
   static std::string zz[] = { "Begin", "Current", "End" };
   XBMC->Log(LOG_DEBUG, "SeekLiveStream (%lld, %s).", pos, zz[whence].c_str());
+#ifdef TSREADER
   if (!m_tsreader)
   {
     return -1;
   }
   return m_tsreader->SetFilePointer(pos, whence);
+#else
+  return -1;
+#endif
 }
 
 
 long long cPVRClientForTheRecord::PositionLiveStream(void)
 {
+#ifdef TSREADER
   if (!m_tsreader)
   {
     return -1;
   }
   return m_tsreader->GetFilePointer();
+#else
+  return -1;
+#endif
 }
 
 long long cPVRClientForTheRecord::LengthLiveStream(void)
 {
+#ifdef TSREADER
   if (!m_tsreader)
   {
     return -1;
   }
   return m_tsreader->GetFileSize();
+#else
+  return -1;
+#endif
 }
 
 
@@ -1478,6 +1481,7 @@ PVR_ERROR cPVRClientForTheRecord::SignalStatus(PVR_SIGNAL_STATUS &signalStatus)
 /** Record stream handling */
 bool cPVRClientForTheRecord::OpenRecordedStream(const PVR_RECORDING &recinfo)
 {
+#ifdef TSREADER
   XBMC->Log(LOG_DEBUG, "->OpenRecordedStream(index=%s)", recinfo.strRecordingId);
   cRecording recording;
   if (!FetchRecordingDetails(recinfo.strRecordingId, recording))
@@ -1516,22 +1520,28 @@ bool cPVRClientForTheRecord::OpenRecordedStream(const PVR_RECORDING &recinfo)
   }
 
   return true;
+#else
+  return false;
+#endif
 }
 
 
 void cPVRClientForTheRecord::CloseRecordedStream(void)
 {
   XBMC->Log(LOG_DEBUG, "->CloseRecordedStream()");
+#ifdef TSREADER
   if (m_tsreader)
   {
     XBMC->Log(LOG_DEBUG, "Close TsReader");
     m_tsreader->Close();
     SAFE_DELETE(m_tsreader);
   }
+#endif //TSREADER
 }
 
 int cPVRClientForTheRecord::ReadRecordedStream(unsigned char* pBuffer, unsigned int iBuffersize)
 {
+#ifdef TSREADER
   unsigned long read_done   = 0;
 
   // XBMC->Log(LOG_DEBUG, "->ReadRecordedStream(buf_size=%i)", iBufferSize);
@@ -1544,10 +1554,14 @@ int cPVRClientForTheRecord::ReadRecordedStream(unsigned char* pBuffer, unsigned 
     XBMC->Log(LOG_NOTICE, "ReadRecordedStream requested %d but only read %d bytes.", iBuffersize, read_done);
   }
   return read_done;
+#else
+  return -1;
+#endif //TSREADER
 }
 
 long long cPVRClientForTheRecord::SeekRecordedStream(long long iPosition, int iWhence)
 {
+#ifdef TSREADER
   if (!m_tsreader)
   {
     return -1;
@@ -1557,24 +1571,35 @@ long long cPVRClientForTheRecord::SeekRecordedStream(long long iPosition, int iW
     return m_tsreader->GetFilePointer();
   }
   return m_tsreader->SetFilePointer(iPosition, iWhence);
+#else
+  return -1;
+#endif //TSREADER
 }
 
 long long cPVRClientForTheRecord::PositionRecordedStream(void)
 { 
+#ifdef TSREADER
   if (!m_tsreader)
   {
     return -1;
   }
   return m_tsreader->GetFilePointer();
+#else
+  return -1;
+#endif //TSREADER
 }
 
 long long cPVRClientForTheRecord::LengthRecordedStream(void)
 {
+#ifdef TSREADER
   if (!m_tsreader)
   {
     return -1;
   }
   return m_tsreader->GetFileSize();
+#else
+  return -1;
+#endif //TSREADER
 }
 
 /*
