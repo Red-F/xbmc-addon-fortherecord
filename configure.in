@@ -1,6 +1,6 @@
 m4_define([MAJOR], 0)
 m4_define([MINOR], 1)
-m4_define([MICRO], 141)
+m4_define([MICRO], 142)
 m4_define(DATE, $(shell date +%Y%m%d))
 
 dnl Process this file with autoconf to produce a configure script.
@@ -13,7 +13,7 @@ AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 
 dnl Setup for automake
-AM_INIT_AUTOMAKE([-Wno-portability])
+AM_INIT_AUTOMAKE([-Wno-portability -Werror])
 
 dnl Check for tools
 
